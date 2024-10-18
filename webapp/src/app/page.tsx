@@ -1,6 +1,4 @@
-"use client";
-
-import TodoDashboardContent from "@/modules/todo/components/todo-dashboard-content";
+import TodoDashboardContent from "@/modules/todo/display/components/todo-dashboard-content";
 
 export default function Home() {
   return <TodoDashboardContent />;

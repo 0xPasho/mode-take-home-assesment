@@ -1,12 +1,24 @@
 import { Checkbox } from "@/components/ui/checkbox";
-import { TodoItemType } from "../types";
-import { useMemo, useState } from "react";
+import { TodoItemType, TodoPriorityType } from "../types";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { ArrowDownIcon, ArrowUpIcon, DashIcon } from "@radix-ui/react-icons";
 
-function capitalizeFirstLetter(str: string) {
+export const priorityBadgeClasses = (priority: TodoPriorityType) => {
+  if (priority === "high") {
+    return { class: "bg-red-500 text-white", icon: ArrowUpIcon };
+  }
+
+  if (priority === "medium") {
+    return { class: "bg-gray-100", icon: DashIcon };
+  }
+
+  return { class: "bg-blue-100", icon: ArrowDownIcon };
+};
+
+export function capitalizeFirstLetter(str: string) {
   if (!str) {
     return "";
   }
@@ -17,26 +29,16 @@ const TodoItem = ({
   item,
   onComplete,
   onViewMore,
+  isChallenge,
 }: {
   item: TodoItemType & { completedAt?: string };
-  onComplete: () => void;
+  onComplete?: () => void;
   onViewMore: () => void;
+  isChallenge?: boolean;
 }) => {
   const [makeStrokeAnimation, setMakeStrokeAnimation] = useState(false);
 
-  const priorityBadgeClasses = () => {
-    if (item.priority === "high") {
-      return { class: "bg-red-500 text-white", icon: ArrowUpIcon };
-    }
-
-    if (item.priority === "medium") {
-      return { class: "bg-gray-100", icon: DashIcon };
-    }
-
-    return { class: "bg-blue-100", icon: ArrowDownIcon };
-  };
-
-  const badge = priorityBadgeClasses();
+  const badge = priorityBadgeClasses(item.priority);
   return (
     <button
       key={item.id}
@@ -49,16 +51,18 @@ const TodoItem = ({
       }}
     >
       <div className="flex flex-row gap-2 w-full">
-        <Checkbox
-          className="shrink-0 rounded-full mt-1.5"
-          onClick={() => {
-            if (!makeStrokeAnimation) {
-              setMakeStrokeAnimation(true);
-            }
-            onComplete();
-          }}
-          checked={!!item.completedAt}
-        />
+        {!isChallenge && (
+          <Checkbox
+            className="shrink-0 rounded-full mt-1.5"
+            onClick={() => {
+              if (!makeStrokeAnimation) {
+                setMakeStrokeAnimation(true);
+              }
+              onComplete?.();
+            }}
+            checked={item.completed}
+          />
+        )}
         <div className="flex w-full flex-col gap-1 w-full">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
@@ -67,11 +71,13 @@ const TodoItem = ({
                 <badge.icon /> {capitalizeFirstLetter(item.priority)}
               </Badge>
             </div>
-            <div className={cn("ml-auto  text-muted-foreground")}>
-              {formatDistanceToNow(new Date(item.dueDate), {
-                addSuffix: true,
-              })}
-            </div>
+            {!isChallenge && (
+              <div className={cn("ml-auto  text-muted-foreground")}>
+                {formatDistanceToNow(new Date(item.dueDate), {
+                  addSuffix: true,
+                })}
+              </div>
+            )}
           </div>
           <div className="text-md font-medium">{item.description}</div>
         </div>
