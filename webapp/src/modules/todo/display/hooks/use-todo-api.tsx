@@ -1,55 +1,85 @@
+import { useState } from "react";
 import { useTodoStore } from "../store/todo-store";
 import { TodoItemType } from "../types";
 
-const API_URL = "http://localhost:7979/api/v1/todos";
+const API_URL = process.env.NEXT_PUBLIC_TODO_API;
 
 const useTodoApi = () => {
+  const [latestPageRetrieval, setLatestPageRetrieval] = useState(0);
   const {
-    items,
     paginationData,
     appendMoreItems,
     updateItem,
     deleteItem,
-    removeInformation,
     updatePaginationData,
+    setIsRetrievingData,
+    removeInformation,
+    viewingPage,
+    setViewingPage,
   } = useTodoStore();
 
-  const fetchTodos = async () => {
+  const fetchTodos = async (newPage: number, fresh?: boolean) => {
     try {
-      const response = await fetch(
-        `${API_URL}?page=${paginationData.page}&limit=${paginationData.limit}`
-      );
+      const currentViewingPage = viewingPage;
+      setViewingPage(newPage);
+      // If we are retrieving fresh data, we reset the latest page retrieval
+      if (fresh) {
+        setLatestPageRetrieval(newPage);
+        removeInformation(); // clear old data
+      }
+
+      // Avoid fetching if we're trying to load a page we've already retrieved
+      if (currentViewingPage <= latestPageRetrieval && !fresh) {
+        return;
+      }
+
+      // Set loading state
+      setIsRetrievingData(true);
+
+      // Fetch data from the API
+      const response = await fetch(`${API_URL}?page=${newPage}`);
       const data = await response.json();
+
+      // Append fetched todos to the store
       appendMoreItems(data.data, "end");
+
+      // Update pagination data
       updatePaginationData({
         limit: data.limit,
         page: data.page,
         total: data.total,
       });
+
+      // Update the latest page retrieval state to the newly fetched page
+      if (fresh) {
+        setLatestPageRetrieval(1);
+      } else {
+        setLatestPageRetrieval((value) => Math.max(value, newPage));
+      }
     } catch (error) {
       console.error("Failed to fetch todos", error);
+    } finally {
+      // Stop loading state
+      setIsRetrievingData(false);
     }
   };
 
-  // Create a new Todo item
   const createTodo = async (newTodo: Partial<TodoItemType>) => {
     try {
-      const response = await fetch(API_URL, {
+      await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(newTodo),
       });
-      const createdTodo = await response.json();
-      appendMoreItems([createdTodo], "start");
+      await fetchTodos(1, true);
     } catch (error) {
       console.error("Failed to create todo", error);
     }
   };
 
-  // Update a Todo item
-  const updateTodo = async (id: number, updatedData: Partial<TodoItemType>) => {
+  const updateTodo = async (id: string, updatedData: Partial<TodoItemType>) => {
     try {
       const response = await fetch(`${API_URL}/${id}`, {
         method: "PUT",
@@ -59,7 +89,7 @@ const useTodoApi = () => {
         body: JSON.stringify(updatedData),
       });
       if (response.ok) {
-        updateItem(id, updatedData); // Update the item in the store
+        updateItem(id, updatedData);
       } else {
         console.error("Failed to update todo");
       }
@@ -68,14 +98,13 @@ const useTodoApi = () => {
     }
   };
 
-  // Delete a Todo item
-  const deleteTodo = async (id: number) => {
+  const deleteTodo = async (id: string) => {
     try {
       const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
       });
       if (response.ok) {
-        deleteItem(id); // Remove the item from the store
+        await fetchTodos(1, true);
       } else {
         console.error("Failed to delete todo");
       }
@@ -84,19 +113,12 @@ const useTodoApi = () => {
     }
   };
 
-  // Clear all Todo data (both local and remote handling can be implemented)
-  const clearTodos = () => {
-    removeInformation();
-  };
-
   return {
-    items,
     paginationData,
     fetchTodos,
     createTodo,
     updateTodo,
     deleteTodo,
-    clearTodos,
   };
 };
 

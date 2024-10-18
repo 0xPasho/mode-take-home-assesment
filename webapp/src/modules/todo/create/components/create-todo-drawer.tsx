@@ -4,13 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import {
   MDXEditor,
@@ -42,6 +39,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
 import useTodoApi from "../../display/hooks/use-todo-api";
+import { useTodoStore } from "../../display/store/todo-store";
+import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { useTheme } from "next-themes";
 
 const priorities: Array<TodoPriorityType> = ["low", "medium", "high"];
 
@@ -52,28 +53,61 @@ export function CreateTodoDrawer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [title, setTitle] = useState("");
-  const [details, setDetails] = useState("");
-  const [priority, setPriority] = useState<TodoPriorityType>("low");
-  const [date, setDate] = useState<Date | undefined>(undefined);
-  const { createTodo } = useTodoApi();
+  const [isLoading, setIsLoading] = useState(false);
+  const { previewTodoItemId, items } = useTodoStore();
+  const { fetchTodos } = useTodoApi();
+  const foundItem = items.find((item) => item.id === previewTodoItemId);
+  const [title, setTitle] = useState(foundItem?.title || "");
+  const [details, setDetails] = useState(foundItem?.description || "");
+  const [priority, setPriority] = useState<TodoPriorityType>(
+    foundItem?.priority || "low"
+  );
+  const [date, setDate] = useState<Date | undefined>(
+    foundItem?.dueDate ? new Date(foundItem.dueDate) : undefined
+  );
+  const { createTodo, updateTodo } = useTodoApi();
   const handleSave = async () => {
-    const newTodo = {
-      title,
-      details,
-      priority,
-      date,
-    };
-    console.log("Saving todo:", newTodo);
-    // Handle save logic here (e.g., API call or state update)
-    const response = await createTodo({
+    if (details.length < 1) {
+      toast({ variant: "destructive", title: "Description cannot be empty" });
+      return;
+    }
+    setIsLoading(true);
+    const dataToUpdate = {
+      ...foundItem,
       description: details,
-      dueDate: date ? date.toISOString() : undefined,
+      dueDate: date ? date.toISOString() : new Date().toISOString(),
       priority,
       title,
+    };
+    if (previewTodoItemId) {
+      if (!foundItem?.id) {
+        console.log({ error: "TODO Not found" });
+        return;
+      }
+      await updateTodo(foundItem.id, {
+        ...foundItem,
+        ...dataToUpdate,
+      });
+      toast({
+        title: `Task Updated: ${dataToUpdate.title}`,
+      });
+      setIsLoading(false);
+      onOpenChange(false);
+      return;
+    }
+    await createTodo({
+      ...dataToUpdate,
+      completed: false,
     });
-    console.log({ response });
+    setIsLoading(false);
+    onOpenChange(false);
+    toast({
+      title: `New Task Created: ${dataToUpdate.title}`,
+    });
+    fetchTodos(1, true);
   };
+
+  const { theme } = useTheme();
 
   return (
     <Sheet onOpenChange={onOpenChange} open={open}>
@@ -97,7 +131,7 @@ export function CreateTodoDrawer({
               markdown={details}
               onChange={(newMarkdown) => setDetails(newMarkdown)}
               placeholder="Give more details of this task"
-              className="min-h-[200px]"
+              className={cn("min-h-[200px]", theme === "dark" ? "dark" : "")}
               plugins={[
                 toolbarPlugin({
                   toolbarContents: () => (
@@ -111,7 +145,7 @@ export function CreateTodoDrawer({
             />
             <div className="w-full pb-1 flex flex-row gap-4">
               <div className="pb-1 flex flex-col">
-                <Label className="font-bold">Priority</Label>
+                <Label className="font-bold mb-2">Priority</Label>
                 <Select
                   value={priority}
                   onValueChange={(priority: TodoPriorityType) => {
@@ -142,7 +176,7 @@ export function CreateTodoDrawer({
                 </Select>
               </div>
               <div className="pb-1 flex flex-col">
-                <Label className="font-bold">Due date</Label>
+                <Label className="font-bold mb-2">Due date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -168,11 +202,14 @@ export function CreateTodoDrawer({
             </div>
           </div>
           <SheetFooter className="mb-8">
-            <SheetClose asChild>
-              <Button type="submit" className="w-full" onClick={handleSave}>
-                Save changes
-              </Button>
-            </SheetClose>
+            <Button
+              type="button"
+              disabled={isLoading}
+              className="w-full"
+              onClick={handleSave}
+            >
+              {isLoading ? "Saving..." : "Save changes"}
+            </Button>
           </SheetFooter>
         </div>
       </SheetContent>
