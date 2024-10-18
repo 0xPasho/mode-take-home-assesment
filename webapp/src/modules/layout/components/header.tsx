@@ -9,7 +9,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
-export function Header({}: React.HTMLAttributes<HTMLElement>) {
+import { useAccount } from "wagmi";
+import { Badge } from "@/components/ui/badge";
+import { usePolygonStore } from "@/modules/polygon/store/polygon-store";
+export function Header() {
+  const { loadingErc20, erc20Price } = usePolygonStore();
+  const { address } = useAccount();
+
   return (
     <div className="w-full flex h-16 items-center justify-between py-4 mb-8">
       <div className="flex flex-row gap-4">
@@ -20,6 +26,14 @@ export function Header({}: React.HTMLAttributes<HTMLElement>) {
             alt={"Mode Mobile To-do List"}
           />
         </div>
+        {!loadingErc20 && (
+          <Badge
+            className="text-sm md:text-md border-blue-500"
+            variant="secondary"
+          >
+            Curr Erc20 Balance: {erc20Price}
+          </Badge>
+        )}
       </div>
       <div className="flex flex-row gap-2 items-center">
         <DropdownMenu>
@@ -38,6 +52,7 @@ export function Header({}: React.HTMLAttributes<HTMLElement>) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel className="flex flex-row gap-1">
+              Welcome back {address?.slice(0, 8)}...
               {/* <img
               src={user.image || "/default-img.png"}
               alt="Avatar"

@@ -1,7 +1,8 @@
 "use client";
+
 import React from "react";
 import { SiweMessage } from "siwe";
-import { polygonMumbai } from "viem/chains";
+import { polygonAmoy } from "viem/chains";
 import { useAccount, useSignMessage } from "wagmi";
 import { useWeb3Modal } from "@web3modal/react";
 import { getCsrfToken, signIn } from "next-auth/react";
@@ -28,7 +29,7 @@ const AuthPage = () => {
         address: address,
         statement: process.env.NEXT_PUBLIC_SIGNIN_MESSAGE,
         nonce: await getCsrfToken(),
-        chainId: polygonMumbai.id,
+        chainId: polygonAmoy.id,
       });
 
       const signedMessage = await signMessageAsync({
@@ -65,7 +66,7 @@ const AuthPage = () => {
             To access the todo app
           </h2>
           <p className="text-xl text-gray-500 mt-2 mb-6">you will need to</p>
-          <Button onClick={() => open()}>
+          <Button onClick={() => open({ open: true })}>
             <BoxIcon /> Connect Wallet
           </Button>
         </>

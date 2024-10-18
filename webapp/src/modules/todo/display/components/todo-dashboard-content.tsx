@@ -8,17 +8,32 @@ import { CreateTodoDrawer } from "../../create/components/create-todo-drawer";
 import "@mdxeditor/editor/style.css";
 import { useTodoStore } from "../store/todo-store";
 import { Button } from "@/components/ui/button";
-import { CheckCircledIcon, PlusCircledIcon } from "@radix-ui/react-icons";
+import {
+  BoxIcon,
+  CheckCircledIcon,
+  PlusCircledIcon,
+} from "@radix-ui/react-icons";
 import ChallengeItem from "./challenge-item";
 import { Footer } from "@/modules/layout/components/footer";
 import { Header } from "@/modules/layout/components/header";
+import useFetchErc20Data from "@/modules/polygon/hooks/useFetchErc20Data";
+import useFetchNftData from "@/modules/polygon/hooks/useFetchNftData";
+import NftDataContent from "./nft-data-content";
 
 const TodoDashboardContent = () => {
+  const { refreshErc20Data } = useFetchErc20Data();
+  const { refreshNftData } = useFetchNftData();
   const { items, viewingPage, paginationData, setPreviewTodoItemId } =
     useTodoStore();
   const initialCall = useRef(false);
   const [isTodoDrawerOpen, setIsTodoDrawerOpen] = useState(false);
   const { fetchTodos, updateTodo } = useTodoApi();
+
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     if (!initialCall.current) {
@@ -32,6 +47,17 @@ const TodoDashboardContent = () => {
     viewingPage * paginationData.limit
   );
 
+  useEffect(() => {
+    if (isClient) {
+      refreshErc20Data();
+      refreshNftData();
+    }
+  }, [isClient]);
+
+  if (!isClient) {
+    return null;
+  }
+
   return (
     <div className="max-w-6xl mx-auto pt-4 pb-12 px-4 xl:px-0">
       <Header />
@@ -40,7 +66,7 @@ const TodoDashboardContent = () => {
           <CheckCircledIcon className="w-6 h-6 mt-1.5" />
           <h2 className="text-3xl font-bold tracking-tight mb-2">Challenges</h2>
         </div>
-        <ChallengeItem onViewMore={() => {}} />
+        <ChallengeItem />
       </div>
       <div className="w-full mt-8">
         <div className="flex flex-row items-center gap-4">
@@ -89,10 +115,20 @@ const TodoDashboardContent = () => {
           )}
         </div>
         <TodoPagination />
+        <div className="w-full mt-8">
+          <div className="flex flex-row gap-2">
+            <BoxIcon className="w-6 h-6 mt-1.5" />
+            <h2 className="text-3xl font-bold tracking-tight mb-2">Nfts</h2>
+          </div>
+          <div className="w-full flex-col">
+            <NftDataContent />
+          </div>
+        </div>
         <div className="mt-8 w-full border-t pt-2">
           <Footer />
         </div>
       </div>
+
       <CreateTodoDrawer
         open={isTodoDrawerOpen}
         key={`${isTodoDrawerOpen}`}

@@ -36,8 +36,6 @@ export const authOptions: AuthOptions = {
             throw new Error("Statement Mismatch");
           }
 
-          // if (new Date(result.data.expirationTime as string) < new Date())
-          //   throw new Error("Signature Already expired");
           console.log("Returning");
           return {
             id: siwe.address,

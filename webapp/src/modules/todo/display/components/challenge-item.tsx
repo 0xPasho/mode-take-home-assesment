@@ -4,12 +4,14 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { HandIcon } from "@radix-ui/react-icons";
 import { useTodoStore } from "../store/todo-store";
+import { useNftContract } from "@/modules/polygon/hooks/useNftContract";
 
-const ChallengeItem = ({ onViewMore }: { onViewMore: () => void }) => {
+const ChallengeItem = () => {
   const badge = priorityBadgeClasses("high");
   const { items } = useTodoStore();
   const count = items.filter((item) => item.completed).length;
 
+  const { mintToken } = useNftContract();
   return (
     <button
       className={cn(
@@ -19,9 +21,10 @@ const ChallengeItem = ({ onViewMore }: { onViewMore: () => void }) => {
           : "hover:bg-accent cursor-pointer"
       )}
       disabled={count < 2}
-      onClick={(e) => {
+      onClick={async (e) => {
         e.preventDefault();
-        onViewMore();
+        const response = await mintToken();
+        console.log({ response });
       }}
     >
       <div className="flex flex-row gap-2 w-full">
