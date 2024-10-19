@@ -25,7 +25,7 @@ https://www.loom.com/share/8734703e0c7d424db3217a8cae78360c
 
 https://www.loom.com/share/4a4f8956082841e182c67525b671c669
 
-## Decitions
+## Decisions
 
 - Auth: I decided to stick with NextAuth to manage authentifications to be able to keep the authentication feature open for future integrations with Oauth or any other similar solution.
 - Design: I decided to use Shadcn atomic components as the base for my atomic components, to have all the ownership of how we want the spec of the design to be, and also they are added to standarize all the project colors, ux and structure. Also with this base structure it's really easy to modify the design system to include dark and light mode. Tailwind is another choise included to its simplicity to have the same semantics of how we write CSS.
