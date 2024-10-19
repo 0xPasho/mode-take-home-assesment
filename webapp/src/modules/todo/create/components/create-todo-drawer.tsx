@@ -81,7 +81,6 @@ export function CreateTodoDrawer({
     };
     if (previewTodoItemId) {
       if (!foundItem?.id) {
-        console.log({ error: "TODO Not found" });
         return;
       }
       await updateTodo(foundItem.id, {

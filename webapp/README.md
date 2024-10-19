@@ -15,6 +15,16 @@ with specific ERC20 and ERC721 contracts.
 - Yarn
 - NextJS
 
+## Preview
+
+### How Blockchain logic works
+
+https://www.loom.com/share/8734703e0c7d424db3217a8cae78360c
+
+### How To-Do list Interaction works
+
+https://www.loom.com/share/4a4f8956082841e182c67525b671c669
+
 ## Decitions
 
 - Auth: I decided to stick with NextAuth to manage authentifications to be able to keep the authentication feature open for future integrations with Oauth or any other similar solution.
@@ -88,6 +98,15 @@ To run the project in development mode, use:
 
 ```sh
 yarn dev
+```
+
+<span style="color: red">**IMPORTANT NOTE:** I HAD TO USE ngrok TO BE ABLE TO RUN LOCALLY BOTH THE TODOs AND ALSO THE BLOCKCHAIN WALLET LOGIC. AS I'M USING "RAINBOW" WALLET IT REQUIRE HTTPS ONLY SERVERS. TO BE ABLE TO RUN IT PLEASE USE NGROK TOO.</span>
+
+Command to listen API server and Web app service:
+
+```sh
+ngrok http 7979 -- <= for api server
+ngrok http 3000 -- <= for webapp server
 ```
 
 This runs the dev script specified in our package.json and will start a server that reloads the page as files are saved. The server typically runs at http://localhost:3000.

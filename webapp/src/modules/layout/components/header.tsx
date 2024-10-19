@@ -9,13 +9,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
-import { useAccount } from "wagmi";
+import { useAccount, useDisconnect } from "wagmi";
 import { Badge } from "@/components/ui/badge";
 import { usePolygonStore } from "@/modules/polygon/store/polygon-store";
 export function Header() {
   const { loadingErc20, erc20Price } = usePolygonStore();
   const { address } = useAccount();
-
+  const { disconnect } = useDisconnect();
   return (
     <div className="w-full flex h-16 items-center justify-between py-4 mb-8">
       <div className="flex flex-row gap-4">
@@ -71,7 +71,8 @@ export function Header() {
                 // event.preventDefault();
                 // await fetch("/api/auth", { method: "DELETE" });
                 // // force reloading of page
-                signOut({ redirect: false });
+                signOut();
+                disconnect();
                 window.location.href = "/login";
               }}
               className="cursor-pointer"

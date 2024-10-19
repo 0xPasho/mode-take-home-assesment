@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
 import AuthContext from "./auth-provider";
-import { config } from "../../../../web3-config";
 import { WagmiProvider } from "wagmi";
+import { wagmiConfig } from "../../../../web3-config";
 
 type ProviderType = {
   children: React.ReactNode;
@@ -10,7 +10,7 @@ type ProviderType = {
 
 const Web3Providers = ({ children }: ProviderType) => {
   return (
-    <WagmiProvider config={config}>
+    <WagmiProvider config={wagmiConfig}>
       <AuthContext>{children}</AuthContext>
     </WagmiProvider>
   );

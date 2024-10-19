@@ -19,12 +19,14 @@ import { Header } from "@/modules/layout/components/header";
 import useFetchErc20Data from "@/modules/polygon/hooks/useFetchErc20Data";
 import useFetchNftData from "@/modules/polygon/hooks/useFetchNftData";
 import NftDataContent from "./nft-data-content";
+import { useAccount } from "wagmi";
 
 const TodoDashboardContent = () => {
   const { refreshErc20Data } = useFetchErc20Data();
   const { refreshNftData } = useFetchNftData();
   const { items, viewingPage, paginationData, setPreviewTodoItemId } =
     useTodoStore();
+  const { address } = useAccount();
   const initialCall = useRef(false);
   const [isTodoDrawerOpen, setIsTodoDrawerOpen] = useState(false);
   const { fetchTodos, updateTodo } = useTodoApi();
@@ -48,11 +50,11 @@ const TodoDashboardContent = () => {
   );
 
   useEffect(() => {
-    if (isClient) {
+    if (isClient && address) {
       refreshErc20Data();
       refreshNftData();
     }
-  }, [isClient]);
+  }, [isClient, address]);
 
   if (!isClient) {
     return null;
@@ -100,7 +102,6 @@ const TodoDashboardContent = () => {
                     ...item,
                     completed: !item.completed,
                   });
-                  console.log({ response });
                 }}
                 onViewMore={() => {
                   setPreviewTodoItemId(item.id);

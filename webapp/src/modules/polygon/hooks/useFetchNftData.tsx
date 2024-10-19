@@ -12,7 +12,7 @@ const useFetchNftData = () => {
       setLoadingNfts(true);
 
       const nftResponse = await fetch(
-        "/api/polygon/nfts?userAddress=" + address
+        "/api/polygon/balance/erc721?userAddress=" + address
       );
       const nftData = await nftResponse.json();
 

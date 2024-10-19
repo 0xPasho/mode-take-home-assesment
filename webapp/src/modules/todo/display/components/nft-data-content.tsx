@@ -1,14 +1,16 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import useFetchErc20Data from "@/modules/polygon/hooks/useFetchErc20Data";
 import { useNftContract } from "@/modules/polygon/hooks/useNftContract";
 import { usePolygonStore } from "@/modules/polygon/store/polygon-store";
+import { useState } from "react";
 
 const NftDataContent = () => {
-  const { nfts, loadingNfts } = usePolygonStore();
+  const { nfts, loadingNfts, setNfts } = usePolygonStore();
   const { refreshErc20Data } = useFetchErc20Data();
   const { burnToken } = useNftContract();
-
+  const [isBurning, setIsBurning] = useState(false);
   if (loadingNfts) {
     return <div className="w-full">Loading Nfts...</div>;
   }
@@ -35,16 +37,22 @@ const NftDataContent = () => {
             <span className="text-2xl text-center w-full">
               Nft with token id: {nft}
             </span>
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                const response = await burnToken(parseInt(nft));
-                console.log({ response });
-                await refreshErc20Data();
-              }}
-            >
-              Burn
-            </Button>
+            <div className="w-full">
+              <Button
+                className="w-full"
+                disabled={isBurning}
+                variant="destructive"
+                onClick={async () => {
+                  setIsBurning(true);
+                  const response = await burnToken(parseInt(nft));
+                  refreshErc20Data();
+                  setNfts([]);
+                  setIsBurning(false);
+                }}
+              >
+                {isBurning ? "Burning..." : "Burn"}
+              </Button>
+            </div>
           </button>
         );
       })}

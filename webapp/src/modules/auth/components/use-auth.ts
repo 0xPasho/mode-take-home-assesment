@@ -1,66 +1,103 @@
-import { AuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+import { Account, getServerSession, Profile, Session, User } from "next-auth";
+import { NextAuthOptions } from "next-auth";
+import CredentialsProvider, {
+  CredentialInput,
+} from "next-auth/providers/credentials";
 import { getCsrfToken } from "next-auth/react";
 import { SiweMessage } from "siwe";
+import { AdapterUser } from "next-auth/adapters";
+import { JWT } from "next-auth/jwt";
 
-export const authOptions: AuthOptions = {
+export interface CustomSession extends Session {
+  user?: {
+    account?: `0x${string}`;
+  } & Session["user"];
+}
+
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
-      id: "web3",
-      name: "web3",
+      name: "Ethereum",
       credentials: {
-        message: { label: "Message", type: "text" },
-        signedMessage: { label: "Signed Message", type: "text" }, // aka signature
+        message: {
+          label: "Message",
+          type: "text",
+          placeholder: "0x0",
+        },
+        signature: {
+          label: "Signature",
+          type: "text",
+          placeholder: "0x0",
+        },
+        csrfToken: {
+          label: "CSRF Token",
+          type: "text",
+          placeholder: "0x0",
+        },
       },
       async authorize(credentials, req) {
-        if (!credentials?.signedMessage || !credentials?.message) {
-          return null;
-        }
-        console.log({ credentials });
-
         try {
-          const siwe = new SiweMessage(JSON.parse(credentials?.message));
-          console.log({ siwe });
+          if (!credentials) throw new Error("No credentials");
+          if (!req.headers) throw new Error("No headers");
+
+          const nextAuthUrl = new URL(req.headers?.origin || "");
+          const siwe = new SiweMessage(credentials.message);
           const result = await siwe.verify({
-            signature: credentials.signedMessage,
-            nonce: await getCsrfToken({ req }),
+            signature: credentials.signature,
+            domain: nextAuthUrl.host,
+            nonce: await getCsrfToken({ req: { headers: req.headers } }),
           });
-          console.log({ result });
 
-          if (!result.success) throw new Error("Invalid Signature");
-          console.log({ a: result.data.statement });
-
-          if (
-            result.data.statement !== process.env.NEXT_PUBLIC_SIGNIN_MESSAGE
-          ) {
-            throw new Error("Statement Mismatch");
+          // We upsert the user in the database to keep track the last login
+          // but also the last chainId used
+          if (result.success) {
+            return {
+              id: siwe.address,
+            };
           }
-
-          console.log("Returning");
-          return {
-            id: siwe.address,
-          };
-        } catch (error) {
-          console.log(error);
+          return null;
+        } catch (e) {
           return null;
         }
       },
     }),
   ],
-  session: { strategy: "jwt" },
-
-  debug: process.env.NODE_ENV === "development",
-
-  secret: process.env.NEXTAUTH_SECRET,
-
   callbacks: {
-    async session(session: { token: { sub?: string } }) {
-      return {
-        name: session?.token?.sub,
-      };
+    signIn: async (
+      params: Readonly<{
+        user: User | AdapterUser;
+        account: Account | null;
+        profile?: Profile;
+        email?: { verificationRequest?: boolean };
+        credentials?: Record<string, CredentialInput>;
+      }>
+    ) => {
+      const currentSession = await getServerSession(authOptions);
+      return !currentSession && params.account?.provider === "credentials";
+    },
+    jwt: async ({ token, user }) => {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    session: async ({
+      session,
+      token,
+    }: Readonly<{
+      session: CustomSession;
+      token: JWT;
+    }>): Promise<CustomSession> => {
+      if (session.user) {
+        session.user.account = token.id as `0x${string}`;
+      }
+      return session;
     },
   },
+  session: {
+    strategy: "jwt",
+  },
   pages: {
-    signIn: "/auth",
+    signIn: "/login",
   },
 };

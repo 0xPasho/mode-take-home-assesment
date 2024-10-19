@@ -1,9 +1,17 @@
 import erc20Abi from "@/modules/polygon/utils/ERC721-ABI.json";
 import { NextResponse } from "next/server";
 import { formatUnits } from "viem";
-import { readContract } from "@wagmi/core";
-import { config } from "../../../../../../web3-config";
+import { readContract, createConfig } from "@wagmi/core";
 import { ERC20_ADDRESS } from "@/modules/polygon/contants";
+import { polygonAmoy } from "wagmi/chains";
+import { http } from "wagmi";
+
+const config = createConfig({
+  chains: [polygonAmoy],
+  transports: {
+    [polygonAmoy.id]: http("https://polygon-amoy-bor-rpc.publicnode.com"),
+  },
+});
 
 const getUserBalances = (
   userAddress: string
