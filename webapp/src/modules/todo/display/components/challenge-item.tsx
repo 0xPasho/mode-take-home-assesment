@@ -12,7 +12,7 @@ import { usePolygonStore } from "@/modules/polygon/store/polygon-store";
 const ChallengeItem = () => {
   const badge = priorityBadgeClasses("high");
   const { items } = useTodoStore();
-  const count = 2; //items.filter((item) => item.completed).length;
+  const count = items.filter((item) => item.completed).length;
   const [minting, setMinting] = useState(false);
   const { nfts } = usePolygonStore();
   const { mintToken } = useNftContract();

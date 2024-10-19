@@ -12,6 +12,7 @@ import { signOut } from "next-auth/react";
 import { useAccount, useDisconnect } from "wagmi";
 import { Badge } from "@/components/ui/badge";
 import { usePolygonStore } from "@/modules/polygon/store/polygon-store";
+
 export function Header() {
   const { loadingErc20, erc20Price } = usePolygonStore();
   const { address } = useAccount();
@@ -53,24 +54,9 @@ export function Header() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel className="flex flex-row gap-1">
               Welcome back {address?.slice(0, 8)}...
-              {/* <img
-              src={user.image || "/default-img.png"}
-              alt="Avatar"
-              className="overflow-hidden rounded-full mt-1.5 w-4 h-4"
-              style={{ objectFit: "cover" }}
-            />
-            <div className="flex flex-col">
-              <span>
-                {user.name} {user.lastName}
-              </span>
-              <span className="text-xs">{user.email}</span>
-            </div> */}
             </DropdownMenuLabel>
             <DropdownMenuItem
               onClick={async (event) => {
-                // event.preventDefault();
-                // await fetch("/api/auth", { method: "DELETE" });
-                // // force reloading of page
                 signOut();
                 disconnect();
                 window.location.href = "/login";
