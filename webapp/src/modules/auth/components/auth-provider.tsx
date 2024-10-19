@@ -23,9 +23,7 @@ export default function AuthContext({ children }: AuthContextProps) {
         <RainbowKitSiweNextAuthProvider
           getSiweMessageOptions={() => ({
             statement: process.env.NEXT_PUBLIC_SIGNIN_MESSAGE,
-            domain: new URL(
-              "https://6cb5-2806-2f0-53e0-b62-ad1f-1600-bdf9-914b.ngrok-free.app"
-            ).host, //process.env.NEXT_PUBLIC_APP_URL!).host,
+            domain: new URL(process.env.NEXT_PUBLIC_APP_URL!).host,
           })}
         >
           <RainbowKitProvider
